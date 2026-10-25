@@ -44,7 +44,12 @@ router.post('/users/login', async (req: Request, res: Response, next: NextFuncti
  */
 router.get('/user', auth.required, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = await getCurrentUser(req.auth?.user?.id);
+    const authUserId = req.auth?.user?.id;
+    if (!authUserId) {
+      return next(new Error('Unauthorized'));
+    }
+
+    const user = await getCurrentUser(authUserId);
     res.json({ user });
   } catch (error) {
     next(error);
@@ -60,7 +65,12 @@ router.get('/user', auth.required, async (req: Request, res: Response, next: Nex
  */
 router.put('/user', auth.required, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = await updateUser(req.body.user, req.auth?.user?.id);
+    const authUserId = req.auth?.user?.id;
+    if (!authUserId) {
+      return next(new Error('Unauthorized'));
+    }
+
+    const user = await updateUser(req.body.user, authUserId);
     res.json({ user });
   } catch (error) {
     next(error);

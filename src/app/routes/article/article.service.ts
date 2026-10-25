@@ -95,7 +95,10 @@ export const getArticles = async (query: any, id?: number) => {
           followedBy: true,
         },
       },
-      favoritedBy: true,
+      favoritedBy: {
+        where: { id: { in: id === undefined ? [] : [id] } },
+        select: { id: true },
+      },
       _count: {
         select: {
           favoritedBy: true,
@@ -144,7 +147,10 @@ export const getFeed = async (offset: number, limit: number, id: number) => {
           followedBy: true,
         },
       },
-      favoritedBy: true,
+      favoritedBy: {
+        where: { id: { in: id === undefined ? [] : [id] } },
+        select: { id: true },
+      },
       _count: {
         select: {
           favoritedBy: true,
@@ -226,7 +232,10 @@ export const createArticle = async (article: any, id: number) => {
           followedBy: true,
         },
       },
-      favoritedBy: true,
+      favoritedBy: {
+        where: { id: { in: id === undefined ? [] : [id] } },
+        select: { id: true },
+      },
       _count: {
         select: {
           favoritedBy: true,
@@ -257,7 +266,10 @@ export const getArticle = async (slug: string, id?: number) => {
           followedBy: true,
         },
       },
-      favoritedBy: true,
+      favoritedBy: {
+        where: { id: { in: id === undefined ? [] : [id] } },
+        select: { id: true },
+      },
       _count: {
         select: {
           favoritedBy: true,
@@ -370,7 +382,10 @@ export const updateArticle = async (article: any, slug: string, id: number) => {
           followedBy: true,
         },
       },
-      favoritedBy: true,
+      favoritedBy: {
+        where: { id: { in: id === undefined ? [] : [id] } },
+        select: { id: true },
+      },
       _count: {
         select: {
           favoritedBy: true,
@@ -585,7 +600,10 @@ export const favoriteArticle = async (slugPayload: string, id: number) => {
           followedBy: true,
         },
       },
-      favoritedBy: true,
+      favoritedBy: {
+        where: { id: { in: id === undefined ? [] : [id] } },
+        select: { id: true },
+      },
       _count: {
         select: {
           favoritedBy: true,
@@ -631,7 +649,10 @@ export const unfavoriteArticle = async (slugPayload: string, id: number) => {
           followedBy: true,
         },
       },
-      favoritedBy: true,
+      favoritedBy: {
+        where: { id: { in: id === undefined ? [] : [id] } },
+        select: { id: true },
+      },
       _count: {
         select: {
           favoritedBy: true,

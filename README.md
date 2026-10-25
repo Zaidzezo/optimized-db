@@ -8,6 +8,7 @@ Learning real system design by breaking and fixing a real PostgreSQL app under l
 - Load testing: k6
 
 ## The App
+
 Conduit — a Medium.com clone with users, articles, comments, follows, and favorites.
 
 ## Benchmark Results
@@ -22,35 +23,42 @@ Conduit — a Medium.com clone with users, articles, comments, follows, and favo
 
 ### Connection Pooling
 
-Tested different Prisma connection pool sizes using k6 with up to 500 virtual users and 5,000 articles in PostgreSQL.
+Tested Prisma pool sizes using k6 with up to 500 virtual users and 5,000 articles.
 
-| Pool size | avg | p(95) | requests | req/s | failures |
-|---|---|---|---|---|---|
-| Default | 798ms | 2.81s | 10,899 | 88.59 | 0% |
-| 5 | 448ms | 1.78s | 13,410 | 109.19 | 0% |
-| **10** | **475ms** | **1.38s** | **13,083** | **107.15** | **0%** |
-| 20 | 764ms | 2.77s | 11,061 | 90.22 | 0% |
+| Pool size | avg | p(95) | req/s | failures |
+|---|---|---|---|---|
+| Default | 798ms | 2.81s | 88.59 | 0% |
+| 5 | 448ms | 1.78s | 109.19 | 0% |
+| **10** | **475ms** | **1.38s** | **107.15** | **0%** |
+| 20 | 764ms | 2.77s | 90.22 | 0% |
 
-A pool size of **10 connections** achieved the lowest p95 latency while maintaining throughput close to the best-performing configuration.
+Selected `connection_limit=10`, achieving approximately **51% lower p95 latency** than the default in initial benchmarks. Results are based on one run per configuration.
 
-Compared to Prisma's default pool configuration:
-- **51% lower p95 latency** (2.81s → 1.38s)
-- **40% lower average latency** (798ms → 475ms)
-- **21% higher throughput** (88.59 → 107.15 req/s)
+### N+1 Investigation
 
-Increasing the pool to 20 connections worsened performance, suggesting that allowing more concurrent database queries isn't always beneficial.
+Enabled Prisma query logging and tested `/api/articles` with 1, 10, and 100 articles.
 
-The selected configuration is `connection_limit=10` in `DATABASE_URL`.
+All three requests executed **7 article-related SQL queries**, confirming that Prisma was batching the relationships rather than exhibiting an N+1 pattern in this endpoint.
 
-Results are from one benchmark run per configuration, so additional runs would be needed to confirm consistency.
+### Favorite Relationship Optimization
+
+Found that the API loaded all users who favorited an article just to calculate `favorited` and `favoritesCount`.
+
+Optimized this by filtering `favoritedBy` to the authenticated user and using `_count.favoritedBy` for the total.
+
+Verified authenticated and unauthenticated behavior, including favoriting and unfavoriting. Performance impact has not yet been benchmarked.
 
 ## Optimizations Applied
+
 - [x] Indexes on `createdAt`, `slug`, `authorId`, `articleId`
-- [x] Prisma connection pool tuning — benchmarked default, 5, 10, and 20 connections; selected 10 based on p95 latency
+- [x] Connection pool tuning — selected 10 connections
+- [x] N+1 investigation — no N+1 pattern found in `/api/articles`
+- [x] Reduced unnecessary favorite relationship loading
 
 ## Next
+
+- [ ] Optimize follower relationship loading
 - [ ] Redis caching
-- [ ] N+1 query fix
 - [ ] Partitioning
 - [ ] Read replicas
 - [ ] Sharding
